@@ -80,7 +80,7 @@ def predict_call_worthiness(
     return predictions
 
 
-if __name__ == "__main__":
+'''if __name__ == "__main__":
     data_path = os.path.join(os.getcwd(), "../data/data_extracted")
     df = pd.read_csv(os.path.join(data_path, "bank.csv"), delimiter=";")
 
@@ -89,4 +89,4 @@ if __name__ == "__main__":
         model_path=os.path.join(os.getcwd(), "../models/best_rf_classifier.sav"),
         threshold_path=os.path.join(os.getcwd(), "../models/best_threshold.json"),
         ohe_path=os.path.join(os.getcwd(), "../models/ohe_encoder.pkl")
-    )
+    )'''
