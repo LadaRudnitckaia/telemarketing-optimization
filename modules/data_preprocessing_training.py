@@ -7,9 +7,40 @@ The module implements the function that preprocesses the input data to train a r
 import os
 import pandas as pd
 import numpy as np
+import sklearn
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
+
+
+def apply_ohe(
+    data: pd.DataFrame,
+    ohe_encoder: sklearn.preprocessing._encoders.OneHotEncoder,
+    categorical_cols: pd.core.indexes.base.Index,
+    numerical_cols: pd.core.indexes.base.Index,
+) -> pd.DataFrame:
+    """Helper function for mixed type datasets that applies one-hot-encoding only to categorical features and leaves numerical features unchanged.
+
+    Args:
+        data (pd.DataFrame): Data to apply one-hot-encoding to, both numeric and string types
+        ohe_encoder (sklearn.preprocessing._encoders.OneHotEncoder): Fitted one hot encoder object
+        categorical_cols (pandas.core.indexes.base.Index): categorical columns
+        numerical_cols (pandas.core.indexes.base.Index): numerical columns
+
+    Returns:
+        pd.DataFrame: Encoded data
+    """
+
+    categorical_data_encoded = ohe_encoder.transform(data[categorical_cols])
+    encoded_feature_names = ohe_encoder.get_feature_names_out(
+        input_features=categorical_cols
+    )
+    categorical_data_encoded = pd.DataFrame(
+        categorical_data_encoded, index=data.index, columns=encoded_feature_names
+    )
+
+    encoded_data = pd.concat([categorical_data_encoded, data[numerical_cols]], axis=1)
+    return encoded_data
 
 
 def data_preprocessing_training(
@@ -50,15 +81,25 @@ def data_preprocessing_training(
         tr_val_x, tr_val_y, test_size=0.10, random_state=42, stratify=tr_val_y
     )
 
-    # apply One Hot Encoding to categorical features
-    ohe_encoder = OneHotEncoder(handle_unknown="ignore")
-    ohe_encoder = ohe_encoder.fit(tr_x)  # fit on training data
-    tr_x = ohe_encoder.transform(tr_x)  # apply to training data
-    val_x = ohe_encoder.transform(val_x)  # apply to validation data
-    test_x = ohe_encoder.transform(test_x)  # apply to test data
+    # fit one hot encoder using training data
+    categorical_cols = tr_x.select_dtypes(include=["object"]).columns
+    numerical_cols = tr_x.select_dtypes(exclude=["object"]).columns
+    ohe_encoder = OneHotEncoder(handle_unknown="ignore", sparse=False)
+    ohe_encoder = ohe_encoder.fit(tr_x[categorical_cols])  # fit on training data
+
+    # apply one hot encoding to train, validation, and test splits
+    tr_x_enc = apply_ohe(
+        tr_x, ohe_encoder, categorical_cols, numerical_cols
+    )  # apply to training data
+    val_x_enc = apply_ohe(
+        val_x, ohe_encoder, categorical_cols, numerical_cols
+    )  # apply to validation data
+    test_x_enc = apply_ohe(
+        test_x, ohe_encoder, categorical_cols, numerical_cols
+    )  # apply to test data
 
     return {
-        "splits": (tr_x, tr_y, val_x, val_y, test_x, test_y),
+        "splits": (tr_x_enc, tr_y, val_x_enc, val_y, test_x_enc, test_y),
         "ohe_encoder": ohe_encoder,
     }
 

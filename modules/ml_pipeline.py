@@ -13,6 +13,7 @@ from sklearn.model_selection import train_test_split
 import joblib
 import json
 import pickle
+from data_preprocessing_training import apply_ohe
 
 
 def predict_call_worthiness(
@@ -60,11 +61,17 @@ def predict_call_worthiness(
     data_preprocessed = input_data.filter(items=required_features)
 
     # apply One Hot Encoding from training data to categorical features in new data
-    ohe_encoder = pickle.load(open(ohe_path, 'rb'))
-    data_preprocessed = ohe_encoder.transform(data_preprocessed)
+    ohe_encoder = pickle.load(open(ohe_path, "rb"))
+    categorical_cols = data_preprocessed.select_dtypes(include=["object"]).columns
+    numerical_cols = data_preprocessed.select_dtypes(exclude=["object"]).columns
+    data_preprocessed = apply_ohe(
+        data_preprocessed, ohe_encoder, categorical_cols, numerical_cols
+    )
 
     # load model and threshold
-    model = joblib.load(model_path)
+    model = joblib.load(
+        model_path
+    )  # this design can be not optimal because a model will be loaded each time a request is made. It can be optimized by creating a class and loading a model when initiating a class. However, if we consider that predictions are made in a batch once per week, this might be not that crucial.
     f = open(threshold_path)
     threshold = json.load(f)["best_threshold"]
     f.close()
@@ -72,15 +79,17 @@ def predict_call_worthiness(
     # calculate predictions
     predicted_probabilities = model.predict_proba(data_preprocessed)
     predictions = (predicted_probabilities[:, 1] > threshold).astype(int)
-    
-    predictions = pd.Series(predictions, name = 'Prediction')
-    predicted_probabilities = pd.DataFrame(predicted_probabilities, columns = ['Probability-no', 'Probability-yes'])
+
+    predictions = pd.Series(predictions, name="Prediction")
+    predicted_probabilities = pd.DataFrame(
+        predicted_probabilities, columns=["Probability-no", "Probability-yes"]
+    )
     predictions = pd.concat([predictions, predicted_probabilities], axis=1)
-    
+
     return predictions
 
 
-'''if __name__ == "__main__":
+"""if __name__ == "__main__":
     data_path = os.path.join(os.getcwd(), "../data/data_extracted")
     df = pd.read_csv(os.path.join(data_path, "bank.csv"), delimiter=";")
 
@@ -89,4 +98,4 @@ def predict_call_worthiness(
         model_path=os.path.join(os.getcwd(), "../models/best_rf_classifier.sav"),
         threshold_path=os.path.join(os.getcwd(), "../models/best_threshold.json"),
         ohe_path=os.path.join(os.getcwd(), "../models/ohe_encoder.pkl")
-    )'''
+    )"""
