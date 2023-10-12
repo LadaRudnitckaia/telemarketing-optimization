@@ -57,15 +57,29 @@ Additionally, we analyze how the model makes predicitons, by calculating **globa
 - The results of correlation analysis, also confirm that features describing social and economic context and previous campaigns results can be important for conversion since features 'nr.employed', 'pdays', 'euribor3m', and 'emp.var.rate' have negative correlation with the target and features 'previous' and 'poutcome_success' - have positive correlation with the target.
 
 #### Deployment
-In the final **ML pipeline** that can be used to predict the worthiness of the call for the new data, we include the data preprocessing and application of the model with the correct threshold. We develop a Python module that can be used to make predictions in Python and, additionally, we deploy the final ML pipeline as a **REST service**. The predictions then can be requested from any application that can send a POST request and transfer JSON data.
+In the final **ML pipeline** that can be used to predict the worthiness of the call for the new data, we include the data preprocessing and application of the model with the correct threshold. We develop the predictor class that can be used to make predictions in Python and, additionally, we deploy the final ML pipeline as a **REST service**. The predictions then can be requested from any application that can send a POST request and transfer JSON data.
 
-Given, that the predictions are needed on a weekly basis, we can precompute the predictions in a **batch**, for example, in the beginning of the week and send the results to the call center.
+Given that the predictions are needed on a weekly basis, we can precompute the predictions in a **batch**, for example, in the beginning of the week and send the results to the call center.
 
 Besides, considering that all the recommended calls are made during the week, and the ground truth for these data is also received right after the call (whether the call was indeed worthy or not), we can set up a **regular model monitoring**, and when needed, **retraining and redeployment** of the model to ensure the model reflects the latest production data. For that, model training can be also packed into a module or deployed as a service that can be called when retraining is needed.
 
+For real production, necessary testing, logging, and error handling should be implemented. 
+
 ### Repo structure
 The repo consists of four folders:
-- data - contains zipped and archived data
-- models - contains saved objects needed for the pipeline: the one-hot encoder, the model, and the threshold
-- modules - contain functions for data preprocessing, for making predicitons, for deployment as a REST service, and (example, not finalized) for training
-- notebooks - contain EDA, a notebook where current model was trained and evaluated, and an example of how the pipeline can be used
+- **data**: contains zipped and archived data
+- **models**: contains saved objects needed for the pipeline
+    - **best_rf_classifier.sav**: the model
+    - **best_threshold.json**: threshold
+    - **ohe_encoder.pkl**: the one-hot encoder
+- **modules**: contains scripts with necessary functions and classes
+    - **data_preprocessing_training.py**: data preprocessing for model training
+    - **ml_pipeline.py**: predictor class for making predictions
+    - **ml_pipeline_deployment.py**: deployment as a REST service
+    - **ml_training.py**: (example, not finalized) function for model training
+- **notebooks**: 
+    - **00_extract_data.ipynb**
+    - **01_eda.ipynb**: contains EDA
+    - **02_model_training_and_eval.ipynb**: a notebook where current model was trained, evaluated, and explained
+    - **03_ml_pipeline_application.ipynb**: an example of how the pipeline can be called as a POST request to make predicitons
+

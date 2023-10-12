@@ -2,7 +2,15 @@ name: telemarketing-optimization
 channels:
   - defaults
 dependencies:
-  - python ==3.10
   - pandas
-  - scikit-learn
+  - python==3.10
   - black
+  - scikit-learn
+  - ipykernel
+  - xgboost
+  - matplotlib
+  - seaborn
+  - plotly
+  - nbformat
+  - flask
+  - requests

@@ -16,95 +16,80 @@ import pickle
 from data_preprocessing_training import apply_ohe
 
 
-model_path = ""
-threshold_path = ""
-ohe_path = ""
+model_path = os.path.join(os.getcwd(), "models/best_rf_classifier.sav") # Path to the saved model
+threshold_path = os.path.join(os.getcwd(), "models/best_threshold.json") # Path to the saved threshold
+ohe_path = os.path.join(os.getcwd(), "models/ohe_encoder.pkl") # Path to saved one-hot-encoder to apply to the new data
+
 
 class Predictor:
-    
     def __init__(self):
-        # load model and threshold
-        self.model = joblib.load(
-            model_path
-        )  # this design can be not optimal because a model will be loaded each time a request is made. It can be optimized by creating a class and loading a model when initiating a class. However, if we consider that predictions are made in a batch once per week, this might be not that crucial.
+        # load model, threshold, ohe encoder
+        self.model = joblib.load(model_path)
         f = open(threshold_path)
         self.threshold = json.load(f)["best_threshold"]
         f.close()
-        
         self.ohe_encoder = pickle.load(open(ohe_path, "rb"))
 
+    def predict_call_worthiness(
+        self,
+        input_data: pd.DataFrame
+    ) -> pd.DataFrame:
+        """The function preprocesses the input Pandas dataframe as follows:
+        - filters the required features
+        - applies one-hot-encoding to categorical features
+        - Missing values in categorical columns are treated as separate categories.
+        - Normalization is not needed for a Random Forest model.
+        Next, it applies the model to the preprocessed data to calculate the predictions.
 
-def predict_call_worthiness(self,
-    input_data: pd.DataFrame, model_path: str, threshold_path: str, ohe_path: str
-) -> pd.DataFrame:
-    """The function preprocesses the input Pandas dataframe as follows:
-    - filters the required features
-    - applies one-hot-encoding to categorical features
-    - Missing values in categorical columns are treated as separate categories.
-    - Normalization is not needed for a Random Forest model.
-    Next, it applies the model to the preprocessed data to calculate the predictions.
+        Args:
+            input_data (pd.DataFrame): Input data that contains all the necessary features
 
-    Args:
-        input_data (pd.DataFrame): Input data that contains all the necessary features
-        model_path (str): Path to the saved model
-        threshold_path (str): Path to the saved threshold
-        ohe_path (str): Path to saved one-hot-encoder to apply to the new data
+        Returns:
+            pd.DataFrame: Predictions
 
-    Returns:
-        pd.DataFrame: Predictions
+        """
+        # filter the required features
+        required_features = [
+            "age",
+            "job",
+            "marital",
+            "education",
+            "default",
+            "housing",
+            "loan",
+            "contact",
+            "month",
+            "day_of_week",
+            "campaign",
+            "pdays",
+            "previous",
+            "poutcome",
+            "emp.var.rate",
+            "cons.price.idx",
+            "cons.conf.idx",
+            "euribor3m",
+            "nr.employed",
+        ]
+        data_preprocessed = input_data.filter(items=required_features)
 
-    """
-    # filter the required features
-    required_features = required_features = [
-        "age",
-        "job",
-        "marital",
-        "education",
-        "default",
-        "housing",
-        "loan",
-        "contact",
-        "month",
-        "day_of_week",
-        "campaign",
-        "pdays",
-        "previous",
-        "poutcome",
-        "emp.var.rate",
-        "cons.price.idx",
-        "cons.conf.idx",
-        "euribor3m",
-        "nr.employed",
-    ]
-    data_preprocessed = input_data.filter(items=required_features)
+        # apply One Hot Encoding from training data to categorical features in new data
+        categorical_cols = data_preprocessed.select_dtypes(include=["object"]).columns
+        numerical_cols = data_preprocessed.select_dtypes(exclude=["object"]).columns
+        data_preprocessed = apply_ohe(
+            data_preprocessed, self.ohe_encoder, categorical_cols, numerical_cols
+        )
 
-    # apply One Hot Encoding from training data to categorical features in new data
-    ohe_encoder = pickle.load(open(ohe_path, "rb"))
-    categorical_cols = data_preprocessed.select_dtypes(include=["object"]).columns
-    numerical_cols = data_preprocessed.select_dtypes(exclude=["object"]).columns
-    data_preprocessed = apply_ohe(
-        data_preprocessed, ohe_encoder, categorical_cols, numerical_cols
-    )
+        # calculate predictions
+        predicted_probabilities = self.model.predict_proba(data_preprocessed)
+        predictions = (predicted_probabilities[:, 1] > self.threshold).astype(int)
 
-    # load model and threshold
-    model = joblib.load(
-        model_path
-    )  # this design can be not optimal because a model will be loaded each time a request is made. It can be optimized by creating a class and loading a model when initiating a class. However, if we consider that predictions are made in a batch once per week, this might be not that crucial.
-    f = open(threshold_path)
-    threshold = json.load(f)["best_threshold"]
-    f.close()
+        predictions = pd.Series(predictions, name="Prediction")
+        predicted_probabilities = pd.DataFrame(
+            predicted_probabilities, columns=["Probability-no", "Probability-yes"]
+        )
+        predictions = pd.concat([predictions, predicted_probabilities], axis=1)
 
-    # calculate predictions
-    predicted_probabilities = self.model.predict_proba(data_preprocessed)
-    predictions = (predicted_probabilities[:, 1] > self.threshold).astype(int)
-
-    predictions = pd.Series(predictions, name="Prediction")
-    predicted_probabilities = pd.DataFrame(
-        predicted_probabilities, columns=["Probability-no", "Probability-yes"]
-    )
-    predictions = pd.concat([predictions, predicted_probabilities], axis=1)
-
-    return predictions
+        return predictions
 
 
 """if __name__ == "__main__":
