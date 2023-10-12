@@ -1,17 +1,18 @@
-"""ML Pipeline to Predict Call Worthiness deployed as a REST service
+"""ML Pipeline to Predict Call Worthiness Deployed as a REST service
 
-The module implements the deployment of the ML pipeline as a REST service.
+The deployment of the ML pipeline as a REST service.
 
 """
 
 import os
 from flask import Flask, request, jsonify
-from ml_pipeline import predict_call_worthiness
+from ml_pipeline import predict_call_worthiness, Predictor
 import pandas as pd
 
 
 app = Flask(__name__)
 
+predictor = Predictor()
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -22,11 +23,11 @@ def predict():
         data = pd.DataFrame(data)
 
         # Make predictions using the model
-        predictions = predict_call_worthiness(
+        predictions = predictor.predict_call_worthiness(
             data,
-            model_path=os.path.join(os.getcwd(), "models/best_rf_classifier.sav"),
-            threshold_path=os.path.join(os.getcwd(), "models/best_threshold.json"),
-            ohe_path=os.path.join(os.getcwd(), "models/ohe_encoder.pkl"),
+            #model_path=os.path.join(os.getcwd(), "models/best_rf_classifier.sav"),
+            #threshold_path=os.path.join(os.getcwd(), "models/best_threshold.json"),
+            #ohe_path=os.path.join(os.getcwd(), "models/ohe_encoder.pkl"),
         )
 
         # Prepare the response

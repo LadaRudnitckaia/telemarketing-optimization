@@ -1,6 +1,6 @@
 """ML Pipeline to Predict Call Worthiness
 
-The module implements the function that preprocesses the input data and applies the model to classify clients as worth calling to or not.
+The pipeline preprocesses the input data and applies the model to classify clients as worth calling to or not.
 
 """
 
@@ -16,7 +16,25 @@ import pickle
 from data_preprocessing_training import apply_ohe
 
 
-def predict_call_worthiness(
+model_path = ""
+threshold_path = ""
+ohe_path = ""
+
+class Predictor:
+    
+    def __init__(self):
+        # load model and threshold
+        self.model = joblib.load(
+            model_path
+        )  # this design can be not optimal because a model will be loaded each time a request is made. It can be optimized by creating a class and loading a model when initiating a class. However, if we consider that predictions are made in a batch once per week, this might be not that crucial.
+        f = open(threshold_path)
+        self.threshold = json.load(f)["best_threshold"]
+        f.close()
+        
+        self.ohe_encoder = pickle.load(open(ohe_path, "rb"))
+
+
+def predict_call_worthiness(self,
     input_data: pd.DataFrame, model_path: str, threshold_path: str, ohe_path: str
 ) -> pd.DataFrame:
     """The function preprocesses the input Pandas dataframe as follows:
@@ -77,8 +95,8 @@ def predict_call_worthiness(
     f.close()
 
     # calculate predictions
-    predicted_probabilities = model.predict_proba(data_preprocessed)
-    predictions = (predicted_probabilities[:, 1] > threshold).astype(int)
+    predicted_probabilities = self.model.predict_proba(data_preprocessed)
+    predictions = (predicted_probabilities[:, 1] > self.threshold).astype(int)
 
     predictions = pd.Series(predictions, name="Prediction")
     predicted_probabilities = pd.DataFrame(

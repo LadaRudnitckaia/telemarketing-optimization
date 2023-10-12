@@ -1,6 +1,6 @@
-"""Data preprocessing
+"""Data preprocessing for training
 
-The module implements the function that preprocesses the input data to train a random forest model.
+The function that preprocesses the input data to train a random forest model.
 
 """
 

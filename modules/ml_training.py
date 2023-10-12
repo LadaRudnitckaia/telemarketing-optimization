@@ -1,6 +1,6 @@
-"""Data preprocessing
+"""EXAMPLE SOLUTION - NOT FINALIZED Model training
 
-The module fine tunes and trains a Random Forest model to predict worthy and useless calls to clients.
+The function that fine tunes and trains a Random Forest model to predict worthy and wasted calls to clients. This module can be used to setup regular retraining.
 
 """
 
