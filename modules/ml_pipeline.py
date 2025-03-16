@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 import joblib
 import json
 import pickle
-from data_preprocessing_training import apply_ohe
+from modules.data_preprocessing_training import apply_ohe
 
 
 model_path = os.path.join(os.getcwd(), "models/best_rf_classifier.sav") # Path to the saved model

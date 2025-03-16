@@ -6,7 +6,7 @@ The deployment of the ML pipeline as a REST service.
 
 import os
 from flask import Flask, request, jsonify
-from ml_pipeline import Predictor
+from modules.ml_pipeline import Predictor
 import pandas as pd
 
 
@@ -35,4 +35,4 @@ def predict():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=8000)

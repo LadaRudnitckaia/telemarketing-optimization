@@ -1,0 +1,12 @@
+pandas
+black
+scikit-learn
+ipykernel
+xgboost
+matplotlib
+seaborn
+plotly
+nbformat
+flask
+requests
+uvicorn
