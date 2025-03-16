@@ -16,8 +16,8 @@ COPY ./modules /code/modules
 # Copy the model directory (with the saved model files) into the container
 COPY ./models /code/models
  
-# Expose port 5000 for Flask
-EXPOSE 5000
+# Expose port 8000 for Flask
+EXPOSE 8000
  
 # Command to run the Flask app with Uvicorn
-CMD ["uvicorn", "modules.ml_pipeline_deployment:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["hypercorn", "modules.ml_pipeline_deployment:app", 

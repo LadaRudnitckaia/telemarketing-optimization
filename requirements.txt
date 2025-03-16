@@ -10,3 +10,4 @@ nbformat
 flask
 requests
 uvicorn
+hypercorn
