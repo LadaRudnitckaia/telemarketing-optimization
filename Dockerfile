@@ -20,4 +20,4 @@ COPY ./models /code/models
 EXPOSE 8000
  
 # Command to run the Flask app with Uvicorn
-CMD ["hypercorn", "modules.ml_pipeline_deployment:app", 
+CMD ["hypercorn", "modules.ml_pipeline_deployment:app", "--bind", "0.0.0.0:8000"]
